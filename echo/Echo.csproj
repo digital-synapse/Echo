@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Net\IPAddressExtensions.cs" />
     <Compile Include="Net\StateBroadcast.cs" />
     <Compile Include="Net\UDPBroadcast.cs" />
     <Compile Include="Program.cs" />

@@ -7,13 +7,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Echo
+namespace Echo.Net
 {
     public class UDPMulticast
     {
         string userName;
         int port;
-        const string broadcastAddress = "192.168.0.255";
+        private readonly string broadcastAddress;
 
         UdpClient receivingClient;
         UdpClient sendingClient;
@@ -29,7 +29,8 @@ namespace Echo
         {
             this.port = port;
             localIPEndpoint = getOutboundIP();
-            
+
+            broadcastAddress = localIPEndpoint.Address.GetBroadcastAddress().ToString();
             userName = localIPEndpoint.Address.ToString();
 
             initializeSender();
