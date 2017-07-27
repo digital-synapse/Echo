@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using ZeroFormatter;
 
 namespace Echo.Net
 {
@@ -21,40 +21,57 @@ namespace Echo.Net
             lock (_stateBroadcastInternal.threadLock)
             {
                 listenerIndex = _stateBroadcastInternal.listeners.Count - 1;
-                _stateBroadcastInternal.listeners.Add(new KeyValuePair<Type, Action<string, string>>(type, receiveAndDeserialize));
+                _stateBroadcastInternal.listeners.Add(new KeyValuePair<Type, Action<string, byte[]>>(type, receiveAndDeserialize));
             }
 
             // init MyState
             State[_stateBroadcastInternal.p2p.LocalIP] = new TState();
             lastInvoke = new Stopwatch();
             lastInvoke.Start();
+            lastSend = new Stopwatch();
+            lastSend.Start();
         }
         private int listenerIndex;
+        private Stopwatch lastInvoke;
+        private Stopwatch lastSend;
 
         public static ConcurrentDictionary<string, TState> State { get; set; } = new ConcurrentDictionary<string, TState>();
         public TState MyState => State[_stateBroadcastInternal.p2p.LocalIP];
 
-        private void receiveAndDeserialize(string origin, string json)
+        private void receiveAndDeserialize(string origin, byte[] data)
         {    
             // throttle OnReceive to 50 frames per second                                
             if (lastInvoke.ElapsedMilliseconds > 20)
-            {
-                State[origin] = JsonConvert.DeserializeObject<TState>(json, _stateBroadcastInternal.jsonSettings);
+            {                
+                State[origin] = ZeroFormatterSerializer.Deserialize<TState>(data);
                 if (OnReceive != null) OnReceive.Invoke(origin, State);
                 lastInvoke.Restart();
             }            
         }
-        private Stopwatch lastInvoke;
+        
 
         public Action<string, ConcurrentDictionary<string, TState>> OnReceive { get; set; }
 
-        public void Send(TState state)
+        public bool Send(TState state)
         {
-            // reinit MyState
-            State[_stateBroadcastInternal.p2p.LocalIP] = state;
-            var json = JsonConvert.SerializeObject(MyState, _stateBroadcastInternal.jsonSettings);
-            var type = typeof(TState);
-            _stateBroadcastInternal.p2p.Send(type.Name + "=>" + json);            
+            if (lastSend.ElapsedMilliseconds > 20)
+            {
+                // reinit MyState
+                State[_stateBroadcastInternal.p2p.LocalIP] = state;
+
+                var type = typeof(TState);
+                var bytes = ZeroFormatterSerializer.Serialize(new Payload()
+                {
+                    Origin = _stateBroadcastInternal.p2p.LocalIP,
+                    TypeName = type.Name,
+                    Data = ZeroFormatterSerializer.Serialize(MyState)
+                });
+
+                _stateBroadcastInternal.p2p.Send(bytes);
+                lastSend.Restart();
+                return true;
+            }
+            return false;
         }
 
         // allow this class to be used in a using block to unregister listeners
@@ -63,40 +80,39 @@ namespace Echo.Net
             _stateBroadcastInternal.listeners.RemoveAt(listenerIndex);
         }
     }
+    [ZeroFormattable]
+    public class Payload
+    {
+        [Index(0)]
+        public virtual string Origin { get; set; }
+        [Index(1)]
+        public virtual string TypeName { get; set; }
+        [Index(2)]
+        public virtual byte[] Data { get; set; }
+    }
     internal static class _stateBroadcastInternal
     {
         // static constructor
         public static readonly Object threadLock = new Object();
-        public static UDPMulticast p2p;
-        public static JsonSerializerSettings jsonSettings;
+        public static UDPMulticast p2p;        
         public static Dictionary<string, Type> messageTypes = new Dictionary<string, Type>();
-        public static List<KeyValuePair<Type, Action<string,string>>> listeners;
+        public static List<KeyValuePair<Type, Action<string,byte[]>>> listeners;
         static _stateBroadcastInternal()
         {
             if (p2p == null)
             {
-                listeners = new List<KeyValuePair<Type, Action<string,string>>>();
-                p2p = new UDPMulticast(8888);
-                p2p.OnReceive = msg =>
-                {
-                    // decode header
-                    var parts = msg.Split(new[] { "=>" }, StringSplitOptions.RemoveEmptyEntries);
-                    var json = parts[1];
-                    var parts2 = parts[0].Split(':');
-                    var origin = parts2[0];
-                    var typeName = parts2[1];
+                ZeroFormatterInitializer.Register();
 
-                    var type = messageTypes[typeName];
+                listeners = new List<KeyValuePair<Type, Action<string,byte[]>>>();
+                p2p = new UDPMulticast(8888);
+                p2p.OnReceive = bytes =>
+                {
+                    var result = ZeroFormatterSerializer.Deserialize<Payload>(bytes);
+                    var type = messageTypes[result.TypeName];
                     foreach (var kvp in listeners.Where(x => x.Key == type))
                     {
-                        kvp.Value.Invoke(origin,json);
+                        kvp.Value.Invoke(result.Origin, result.Data);
                     }
-                };
-                jsonSettings = new JsonSerializerSettings()
-                {
-                    NullValueHandling = NullValueHandling.Ignore,
-                    MissingMemberHandling = MissingMemberHandling.Ignore,
-                    
                 };
             }
         }

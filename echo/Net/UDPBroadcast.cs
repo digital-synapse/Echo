@@ -20,7 +20,7 @@ namespace Echo.Net
 
         Thread receivingThread;
 
-        public Action<string> OnReceive;
+        public Action<byte[]> OnReceive;
 
         public string LocalIP => userName;
         private IPEndPoint localIPEndpoint;
@@ -47,6 +47,15 @@ namespace Echo.Net
                 sendingClient.Send(data, data.Length);                
             }
         }
+        public void Send(byte[] bytes)
+        {
+
+            if (bytes!=null && bytes.Length > 0)
+            {
+                sendingClient.Send(bytes, bytes.Length);
+            }
+        }
+
         private void initializeSender()
         {
             sendingClient = new UdpClient(broadcastAddress, port);
@@ -71,11 +80,10 @@ namespace Echo.Net
 
             while (true)
             {
-                byte[] data = receivingClient.Receive(ref endPoint);
-                string message = Encoding.ASCII.GetString(data);
+                byte[] data = receivingClient.Receive(ref endPoint);                
                 // start the callback as a new task (in case its long running we dont want to tie up the listener loop and potentially miss messages)
                 if (OnReceive != null)
-                    Task.Factory.StartNew(()=> OnReceive(message));                
+                    Task.Factory.StartNew(()=> OnReceive(data));                
             }
         }
 

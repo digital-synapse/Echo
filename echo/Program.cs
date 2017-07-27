@@ -1,6 +1,5 @@
 ﻿using Echo.Models;
 using Echo.Net;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +17,7 @@ namespace Echo
             var net = new StateBroadcast<State>((o,states)=> {
                 Console.Clear();
                 foreach (var kvp in states)                
-                    Console.WriteLine(kvp.Key + " -> " + JsonConvert.SerializeObject(kvp.Value));                
+                    Console.WriteLine(kvp.Key + " -> " + kvp.Value.Position.X + ", "+ kvp.Value.Position.Y);                
             });
 
             var state = new State();
