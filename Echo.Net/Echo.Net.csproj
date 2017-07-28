@@ -4,17 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0FC37233-BF74-4C0B-B49B-8DD94B812040}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{7D69D856-EC20-4CA2-BDCB-E9B9D37FF5DE}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Echo</RootNamespace>
-    <AssemblyName>Echo</AssemblyName>
+    <RootNamespace>Echo.Net</RootNamespace>
+    <AssemblyName>Echo.Net</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -24,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -51,25 +48,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Net\IPAddressExtensions.cs" />
-    <Compile Include="Net\StateBroadcast.cs" />
-    <Compile Include="Net\UDPBroadcast.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="IPAddressExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Models\State.cs" />
-    <Compile Include="Net\ZeroFormatterGenerated.cs" />
+    <Compile Include="StateBroadcast.cs" />
+    <Compile Include="UDPBroadcast.cs" />
+    <Compile Include="ZeroFormatterGenerated.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="readme.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>cd $(SolutionDir)
-packages\ZeroFormatter.Interfaces.1.6.4\tools\zfc.exe -u -i "Echo\Echo.csproj" -o "ZeroFormatterGenerated.cs" -o "Echo\Net\ZeroFormatterGenerated.cs"</PreBuildEvent>
+packages\ZeroFormatter.Interfaces.1.6.4\tools\zfc.exe -n "Echo.Net" -u -i "Echo.Net\Echo.Net.csproj" -o "Echo.Net\ZeroFormatterGenerated.cs"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,9 +1,6 @@
-﻿using Echo.Net;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using ZeroFormatter;
+﻿using ZeroFormatter;
 
-namespace Echo.Models
+namespace Echo.Example
 {
     [ZeroFormattable]
     public class State
