@@ -1,4 +1,4 @@
-# Echo.NET
+# Echo.Net
 
 A lightweight ultra-fast UDP library to broadcast application states across a LAN
 
@@ -22,5 +22,6 @@ Example output:
 ````
 
 ## History
-- switched from Newtonsoft.Json to ZeroFormatter. Now all codegen happens at compile-time, broadcasts are direct byte arrays for maximum performance. Removes all overhead of json/string/refection. Because this library is now so fast that it is possible to DDOS your router/switch, I added throttles to the send and receive methods. Send and receive are limited to 50 logic frames per seconds (LFPS)
+- seperated example code project and library dll project. general code cleanup.
+- switched from Newtonsoft.Json to ZeroFormatter. Now all codegen happens at compile-time, broadcasts are direct byte arrays for maximum performance. Removes all overhead of json/string/refection and other runtime penalties. 
 - added algorithm to correctly resolve subnet mask and broadcast address from the assigned IP address. This allows echo to work on any virtual all LAN setups out of the box with zero configuration
