@@ -1,4 +1,4 @@
-# Echo
+# Echo.NET
 
 A lightweight ultra-fast UDP library to broadcast application states across a LAN in .NET
 
